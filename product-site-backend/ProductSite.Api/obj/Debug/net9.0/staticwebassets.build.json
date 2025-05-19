@@ -1,0 +1,125 @@
+{
+  "Version": 1,
+  "Hash": "ery2/LZq6l+Kx0AktJZkIhgM4wSbcNLh46piMVq326M=",
+  "Source": "ProductSite.Api",
+  "BasePath": "_content/ProductSite.Api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "ProductSite.Api\\wwwroot",
+      "Source": "ProductSite.Api",
+      "ContentRoot": "C:\\Users\\groom\\OneDrive\\Desktop\\Repos\\product-site\\product-site-backend\\ProductSite.Api\\wwwroot\\",
+      "BasePath": "_content/ProductSite.Api",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "C:\\Users\\groom\\OneDrive\\Desktop\\Repos\\product-site\\product-site-backend\\ProductSite.Api\\wwwroot\\images\\dcb338d2-bfdb-42f8-bd9f-287eabe7d40a.png",
+      "SourceId": "ProductSite.Api",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\groom\\OneDrive\\Desktop\\Repos\\product-site\\product-site-backend\\ProductSite.Api\\wwwroot\\",
+      "BasePath": "_content/ProductSite.Api",
+      "RelativePath": "images/dcb338d2-bfdb-42f8-bd9f-287eabe7d40a#[.{fingerprint}]?.png",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "n4dp3rscfk",
+      "Integrity": "SQKy2hLMYAuNkQVh095PtDpY8iliFWOw86JLFTKjy5Y=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\images\\dcb338d2-bfdb-42f8-bd9f-287eabe7d40a.png"
+    }
+  ],
+  "Endpoints": [
+    {
+      "Route": "images/dcb338d2-bfdb-42f8-bd9f-287eabe7d40a.n4dp3rscfk.png",
+      "AssetFile": "C:\\Users\\groom\\OneDrive\\Desktop\\Repos\\product-site\\product-site-backend\\ProductSite.Api\\wwwroot\\images\\dcb338d2-bfdb-42f8-bd9f-287eabe7d40a.png",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "177829"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/png"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"SQKy2hLMYAuNkQVh095PtDpY8iliFWOw86JLFTKjy5Y=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 15 May 2025 12:39:49 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "n4dp3rscfk"
+        },
+        {
+          "Name": "label",
+          "Value": "images/dcb338d2-bfdb-42f8-bd9f-287eabe7d40a.png"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-SQKy2hLMYAuNkQVh095PtDpY8iliFWOw86JLFTKjy5Y="
+        }
+      ]
+    },
+    {
+      "Route": "images/dcb338d2-bfdb-42f8-bd9f-287eabe7d40a.png",
+      "AssetFile": "C:\\Users\\groom\\OneDrive\\Desktop\\Repos\\product-site\\product-site-backend\\ProductSite.Api\\wwwroot\\images\\dcb338d2-bfdb-42f8-bd9f-287eabe7d40a.png",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "177829"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/png"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"SQKy2hLMYAuNkQVh095PtDpY8iliFWOw86JLFTKjy5Y=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 15 May 2025 12:39:49 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-SQKy2hLMYAuNkQVh095PtDpY8iliFWOw86JLFTKjy5Y="
+        }
+      ]
+    }
+  ]
+}
