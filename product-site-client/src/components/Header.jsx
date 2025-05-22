@@ -8,14 +8,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Header() {
-  const [loginOpen, setLoginOpen] = useState(false);
   const [tab, setTab] = useState(0); // 0 = Login, 1 = Register
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [keepLoggedIn, setKeepLoggedIn] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { user, login, register, logout, hasRole, loading } = useAuth();
+  const { user, login, register, logout, hasRole, loading, loginModalOpen, openLoginModal, closeLoginModal } = useAuth();
   const nav = useNavigate();
 
   // Show loading state while auth is initializing
@@ -30,14 +29,13 @@ export default function Header() {
   }
 
   const handleOpenLogin = () => {
-    setLoginOpen(true);
+    openLoginModal();
     setTab(0);
     setEmail('');
     setPassword('');
     setKeepLoggedIn(false);
     setError('');
   };
-  const handleCloseLogin = () => setLoginOpen(false);
 
   const handleTabChange = (_, newValue) => {
     setTab(newValue);
@@ -56,7 +54,6 @@ export default function Header() {
         // Login
         const result = await login(email, password, keepLoggedIn);
         if (result.success) {
-          setLoginOpen(false);
           // Redirect based on role
           setTimeout(() => {
             if (hasRole && hasRole('Admin')) {
@@ -72,7 +69,6 @@ export default function Header() {
         // Register
         const result = await register(email, password);
         if (result.success) {
-          setLoginOpen(false);
           nav('/');
         } else {
           setError(result.message || 'Registration failed');
@@ -101,7 +97,7 @@ export default function Header() {
         {/* Left: Logo, Home, About Us */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Typography component={Link} to="/" variant="h6" sx={{ color: 'primary.main', textDecoration: 'none', fontWeight: 700 }}>
-            LOGO
+            Chilli Milli
           </Typography>
           <Button component={Link} to="/" color="inherit">Home</Button>
           <Button component={Link} to="/about" color="inherit">About Us</Button>
@@ -136,7 +132,7 @@ export default function Header() {
         </Box>
       </Toolbar>
       {/* Login/Register Modal */}
-      <Dialog open={loginOpen} onClose={handleCloseLogin} maxWidth="xs" fullWidth>
+      <Dialog open={loginModalOpen} onClose={closeLoginModal} maxWidth="xs" fullWidth>
         <Box sx={{ p: 3 }}>
           <Tabs value={tab} onChange={handleTabChange} centered sx={{ mb: 2 }}>
             <Tab label="Login" />

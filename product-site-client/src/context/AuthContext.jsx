@@ -15,9 +15,18 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
 
   const hasRole = (role) => {
     return user?.roles?.includes(role);
+  };
+
+  const openLoginModal = () => {
+    setLoginModalOpen(true);
+  };
+
+  const closeLoginModal = () => {
+    setLoginModalOpen(false);
   };
 
   const login = async (email, password) => {
@@ -28,6 +37,7 @@ export const AuthProvider = ({ children }) => {
       // We just need to fetch the user info
       const userResponse = await api.get('/account/me');
       setUser(userResponse.data);
+      closeLoginModal();
       return { success: true };
     } catch (error) {
       console.error("Login error:", error);
@@ -59,6 +69,7 @@ export const AuthProvider = ({ children }) => {
       // We just need to fetch the user info
       const userResponse = await api.get('/account/me');
       setUser(userResponse.data);
+      closeLoginModal();
       return { success: true };
     } catch (error) {
       console.error("Registration error:", error);
@@ -92,6 +103,9 @@ export const AuthProvider = ({ children }) => {
     register,
     hasRole,
     loading,
+    loginModalOpen,
+    openLoginModal,
+    closeLoginModal
   };
 
   return (

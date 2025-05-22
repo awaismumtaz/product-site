@@ -1,12 +1,18 @@
-import { Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 export default function RequireAuth({ children, role }) {
-  const { user, loading, hasRole } = useAuth();
+  const { user, hasRole, openLoginModal } = useAuth();
 
-  if (loading) return <div>Loading...</div>;
-  if (!user) return <Navigate to="/login" replace />;
-  if (role && !hasRole(role)) return <div>Forbidden</div>;
-  
+  useEffect(() => {
+    if (!user || (role && !hasRole(role))) {
+      openLoginModal();
+    }
+  }, [user, role, hasRole, openLoginModal]);
+
+  if (!user || (role && !hasRole(role))) {
+    return null;
+  }
+
   return children;
 }

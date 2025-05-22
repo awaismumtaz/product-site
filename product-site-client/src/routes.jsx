@@ -1,10 +1,9 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Home from './pages/Home';
 import Product from './pages/Product';
-import Login from './pages/Login';
-import Register from './pages/Register';
 import Cart from './pages/Cart';
 import Orders from './pages/Orders';
+import About from './pages/About';
 import RequireAuth from './components/RequireAuth';
 import AdminProducts from './pages/admin/AdminProducts';
 import AdminCategories from './pages/admin/AdminCategories';
@@ -23,9 +22,8 @@ const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <Home /> },
+      { path: 'about', element: <About /> },
       { path: 'product/:id', element: <Product /> },
-      { path: 'login', element: <Login /> },
-      { path: 'register', element: <Register /> },
       { path: 'cart', element: <Cart/> },
       { path: 'orders', element: <RequireAuth><Orders/></RequireAuth> },
       { 

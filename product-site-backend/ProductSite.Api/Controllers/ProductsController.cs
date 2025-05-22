@@ -120,6 +120,7 @@ public class ProductsController : ControllerBase
     {
         var product = await _db.Products
             .Include(p => p.Orders)
+                .ThenInclude(o => o.Order)
             .Include(p => p.Reviews)
             .FirstOrDefaultAsync(p => p.Id == id);
 
@@ -129,7 +130,7 @@ public class ProductsController : ControllerBase
         var sixMonthsAgo = now.AddMonths(-6);
 
         var monthlySales = (product.Orders ?? new List<OrderItem>())
-            .Where(o => o.Order.Timestamp >= sixMonthsAgo)
+            .Where(o => o.Order != null && o.Order.Timestamp >= sixMonthsAgo)
             .GroupBy(o => new { o.Order.Timestamp.Year, o.Order.Timestamp.Month })
             .Select(g => new
             {

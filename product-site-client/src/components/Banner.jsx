@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Typography, Button } from '@mui/material';
 
-export default function Banner() {
+export default function Banner({ onButtonClick }) {
   return (
     <Box sx={{
       width: '100%',
@@ -42,6 +42,7 @@ export default function Banner() {
         <Button 
           variant="contained" 
           size="large" 
+          onClick={onButtonClick}
           sx={{ 
             mt: 2,
             bgcolor: 'white',

@@ -6,6 +6,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,6 +15,7 @@ export default function Cart() {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const nav = useNavigate();
+  const { user, openLoginModal } = useAuth();
 
   const total = useMemo(
     () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
@@ -44,6 +46,10 @@ export default function Cart() {
   };
 
   const handleOrder = async () => {
+    if (!user) {
+      openLoginModal();
+      return;
+    }
     if (cart.length === 0) {
       setError('Your cart is empty');
       return;

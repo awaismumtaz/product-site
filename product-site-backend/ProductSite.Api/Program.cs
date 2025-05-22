@@ -124,6 +124,8 @@ app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Product Site API V1");
     c.RoutePrefix = "swagger";
+    c.InjectStylesheet("/swagger-ui/custom.css");
+    c.InjectJavascript("/swagger-ui/custom.js");
 });
 
 app.Run();

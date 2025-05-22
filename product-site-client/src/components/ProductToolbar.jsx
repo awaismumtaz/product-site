@@ -25,11 +25,7 @@ export default function ProductToolbar() {
   const articles = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const handleCartClick = () => {
-    if (user) {
-      nav('/cart');
-    } else {
-      nav('/login');
-    }
+    nav('/cart');
   };
 
   return (
