@@ -8,10 +8,12 @@ namespace ProductSite.Api.Models
         
         // Link to order
         public int OrderId { get; set; }       
+        [JsonIgnore]
         public Order? Order { get; set; }
         
         // Snapshot of product
         public int ProductId { get; set; }
+        [JsonIgnore]
         public Product? Product { get; set; }
         public string ProductName { get; set; } = null!;
         public decimal PriceAtPurchase { get; set; }

@@ -11,11 +11,16 @@ import AdminCategories from './pages/admin/AdminCategories';
 import AdminSales from './pages/admin/AdminSales';
 import AdminOrders from './pages/admin/AdminOrders';
 import Layout from './components/Layout';
+import { CartProvider } from './context/CartContext';
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Layout />,
+    element: (
+      <CartProvider>
+        <Layout />
+      </CartProvider>
+    ),
     children: [
       { index: true, element: <Home /> },
       { path: 'product/:id', element: <Product /> },

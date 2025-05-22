@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import api from '../api/axios';
 
 // 1. Create context
 const CartContext = createContext();
@@ -48,9 +49,7 @@ export function CartProvider({ children }) {
   const addToCart = async (product, qty = 1) => {
     // Fetch latest product data to verify stock and price
     try {
-      const response = await fetch(`/api/products/${product.id}`);
-      if (!response.ok) throw new Error('Failed to verify product');
-      const current = await response.json();
+      const { data: current } = await api.get(`/products/${product.id}`);
 
       // Verify price hasn't changed
       if (current.price !== product.price) {

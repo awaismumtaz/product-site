@@ -7,6 +7,7 @@ namespace ProductSite.Api.Models
     {
         public int Id { get; set; }
         public string UserId { get; set; } = null!;
+        [JsonIgnore]
         public IdentityUser? User { get; set; }
         public DateTime Timestamp { get; set; }
         public ICollection<OrderItem>? Items { get; set; } = new List<OrderItem>();

@@ -72,7 +72,7 @@ export default function ProductGrid() {
             >
               {displayedProducts.map(prod => {
                 return (
-                <Grid item key={prod.id} xs={12} sm={6} md={4} lg={2}>
+                <Grid key={prod.id} sx={{ width: { xs: '100%', sm: '50%', md: '33.33%', lg: '16.66%' } }}>
                   <Card sx={{ 
                     height: '100%', 
                     display: 'flex', 

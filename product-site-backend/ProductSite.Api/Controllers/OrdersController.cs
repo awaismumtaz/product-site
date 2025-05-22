@@ -33,15 +33,26 @@ namespace ProductSite.Api.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Order>>> GetOrders()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null)
-                return Unauthorized();
-            var orders = await _context.Orders
-                .Where(o => o.UserId == userId)
-                .Include(o => o.Items)
-                .OrderByDescending(o => o.Timestamp)
-                .ToListAsync();
-            return orders;
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (userId == null)
+                    return Unauthorized();
+
+                var orders = await _context.Orders
+                    .Where(o => o.UserId == userId)
+                    .Include(o => o.Items)
+                        .ThenInclude(i => i.Product)
+                    .OrderByDescending(o => o.Timestamp)
+                    .ToListAsync();
+
+                return Ok(orders);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving orders for user");
+                return StatusCode(500, "An error occurred while retrieving your orders");
+            }
         }
 
         // Get a specific order for current user
@@ -91,7 +102,8 @@ namespace ProductSite.Api.Controllers
                     if (product.Stock < item.Quantity)
                         return BadRequest($"Insufficient stock for product {product.Name}");
                     
-                    if (product.Price != item.Price)
+                    // Compare prices with a small tolerance for decimal arithmetic
+                    if (Math.Abs(product.Price - item.Price) > 0.001m)
                         return BadRequest($"Price mismatch for product {product.Name}");
                 }
 

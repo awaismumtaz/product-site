@@ -62,13 +62,13 @@ export default function Layout() {
           </IconButton>
           <Typography variant="h6" sx={{ mb: 2, mt: 0, pr: 4 }}>Categories</Typography>
           <List sx={{ mt: 4 }}>
-            <ListItem button>
+            <ListItem component="div">
               <ListItemText primary="Category 1" />
             </ListItem>
-            <ListItem button>
+            <ListItem component="div">
               <ListItemText primary="Category 2" />
             </ListItem>
-            <ListItem button>
+            <ListItem component="div">
               <ListItemText primary="Category 3" />
             </ListItem>
           </List>

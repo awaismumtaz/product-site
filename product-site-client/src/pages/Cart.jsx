@@ -57,12 +57,18 @@ export default function Cart() {
         if (product.stock < item.quantity) {
           throw new Error(`Only ${product.stock} units of "${product.name}" available`);
         }
-        if (product.price !== item.price) {
+        // Compare prices with a small tolerance for floating-point arithmetic
+        if (Math.abs(product.price - item.price) > 0.001) {
           throw new Error(`Price of "${product.name}" has changed. Please refresh your cart.`);
         }
       }
       // Place order
-      await api.post('/orders', cart.map(({ id, quantity }) => ({ id, quantity })));
+      await api.post('/orders', cart.map(({ id, name, price, quantity }) => ({ 
+        id, 
+        name,
+        price,
+        quantity 
+      })));
       clearCart();
       nav('/orders');
     } catch (e) {
