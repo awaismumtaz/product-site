@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using System.Text.Json.Serialization;
 
 namespace ProductSite.Api.Models
 {
@@ -6,9 +7,8 @@ namespace ProductSite.Api.Models
     {
         public int Id { get; set; }
         public string UserId { get; set; } = null!;
-        public IdentityUser User { get; set; } = null!;
+        public IdentityUser? User { get; set; }
         public DateTime Timestamp { get; set; }
-        public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
-
+        public ICollection<OrderItem>? Items { get; set; } = new List<OrderItem>();
     }
 }

@@ -4,6 +4,7 @@ using ProductSite.Api.Data;
 using ProductSite.Api.Models;
 using Microsoft.EntityFrameworkCore;
 
+// Handles CRUD for product categories
 namespace ProductSite.Api.Controllers
 {
     [Route("api/[controller]")]
@@ -17,7 +18,7 @@ namespace ProductSite.Api.Controllers
             _db = db;
         }
 
-        // GET: api/categories
+        // Get all categories (with products)
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Category>>> GetAll()
         {
@@ -27,7 +28,7 @@ namespace ProductSite.Api.Controllers
             return Ok(list);
         }
 
-        // GET: api/categories/5
+        // Get a category by ID
         [HttpGet("{id:int}")]
         public async Task<ActionResult<Category>> GetById(int id)
         {
@@ -39,19 +40,17 @@ namespace ProductSite.Api.Controllers
             return Ok(category);
         }
 
-        // POST: api/categories
+        // Create a new category (admin only)
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<Category>> Create(Category model)
         {
             _db.Categories.Add(model);
             await _db.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetById),
-                                   new { id = model.Id },
-                                   model);
+            return CreatedAtAction(nameof(GetById), new { id = model.Id }, model);
         }
 
-        // PUT: api/categories/5
+        // Update a category (admin only)
         [HttpPut("{id:int}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(int id, Category model)
@@ -74,7 +73,7 @@ namespace ProductSite.Api.Controllers
             return NoContent();
         }
 
-        // DELETE: api/categories/5
+        // Delete a category (admin only)
         [HttpDelete("{id:int}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)

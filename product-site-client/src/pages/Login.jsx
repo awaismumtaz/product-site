@@ -1,54 +1,87 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Container, TextField, Button, Typography, Alert, Box } from '@mui/material';
-import api from '../api/axios';
+import { useAuth } from '../context/AuthContext';
+import { Box, Button, TextField, Typography, Container, Alert } from '@mui/material';
 
+const Login = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
-export default function Login() {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState(null);
-    const nav = useNavigate();
-
-    const handleSubmit = async e => {
-        e.preventDefault();
-        setError(null);
-        try {
-            await api.post('/account/login', { email, password });
-            nav('/'); // Redirect to home page after successful login
-        } catch {
-            setError('Invalid email or password');
-        }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    try {
+      await login(email, password);
+      navigate('/'); // Redirect to homepage after login
+    } catch (err) {
+      setError('Failed to log in. Please check your credentials.');
+      console.error('Login error:', err);
     }
+  };
+
   return (
-    <Container maxWidth="xs" sx={{ mt: 4 }}>
-      <Typography variant="h5" gutterBottom>Login</Typography>
-      {error && <Alert severity="error">{error}</Alert>}
-      <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 2 }}>
-        <TextField
-          label="Email"
-          fullWidth
-          margin="normal"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          required
-        />
-        <TextField
-          label="Password"
-          type="password"
-          fullWidth
-          margin="normal"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          required
-        />
-        <Button type="submit" fullWidth variant="contained" sx={{ mt: 2 }}>
-          Log in
-        </Button>
+    <Container component="main" maxWidth="xs">
+      <Box
+        sx={{
+          marginTop: 8,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <Typography component="h1" variant="h5">
+          Sign in
+        </Typography>
+        {error && (
+          <Alert severity="error" sx={{ mt: 2, width: '100%' }}>
+            {error}
+          </Alert>
+        )}
+        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            id="email"
+            label="Email Address"
+            name="email"
+            autoComplete="email"
+            autoFocus
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            name="password"
+            label="Password"
+            type="password"
+            id="password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            sx={{ mt: 3, mb: 2 }}
+          >
+            Sign In
+          </Button>
+          <Box sx={{ textAlign: 'center' }}>
+            <Link to="/register" style={{ textDecoration: 'none' }}>
+              {"Don't have an account? Sign Up"}
+            </Link>
+          </Box>
+        </Box>
       </Box>
-      <Typography variant="body2" sx={{ mt: 2 }}>
-        Don't have an account? <Link to="/register">Register</Link>
-      </Typography>
     </Container>
-  )
-}
+  );
+};
+
+export default Login;

@@ -1,33 +1,59 @@
 # Dependencies
 /node_modules
 /.pnp
+.pnp.*
 .pnp.js
+.npm/
+.yarn/
+.node_repl_history
+
+# Package management
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
 /yarn.lock
 /package-lock.json
 
-# Testing
-/coverage
-
-# Production/Build
+# Build outputs and distribution
 /build
 /dist
-/.next/
-/out/
+/.next
+/out
 /.nuxt
 /.netlify
 /.vercel
+.turbo
+*.tsbuildinfo
 
-# Environment variables
+# Cache and temporary files
+.cache/
+.temp
+.tmp
+/tmp
+/temp
+.eslintcache
+.stylelintcache
+
+# Testing and coverage
+/coverage
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+*.cpuprofile
+*.heapsnapshot
+
+# Environment and secret files
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+.env*.local
+.envrc
+*.pem
 
-# Debug logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# Logs
+/logs
+*.log
 
 # IDE - VSCode
 .vscode/*
@@ -46,28 +72,62 @@ yarn-error.log*
 # IDE - Others
 .project
 .classpath
+.settings/
 .c9/
 *.launch
-.settings/
+*.sublime-project
 *.sublime-workspace
+*.swp
+*.swo
+.history
 
-# OS specific files
+# OS specific files - Windows
+Thumbs.db
+ehthumbs.db
+desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# OS specific files - macOS
 .DS_Store
-.DS_Store?
+.AppleDouble
+.LSOverride
 ._*
 .Spotlight-V100
 .Trashes
-ehthumbs.db
-Thumbs.db
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
 
-# Windows specific
-desktop.ini
+# OS specific files - Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
 
-# Misc
-*.log
-.cache/
-.cache
-.temp
-.tmp
-.history
+# .NET specific
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+*.csproj.user
 
+# Visual Studio specific files
+.vs/
+*.vsidx
+*.vssscc
+*.vspscc
+*_i.c
+*_p.c
+ipch/
+*.aps
+*.ncb
+*.opendb
+*.opensdf
+*.sdf
+*.cachefile
+*.VC.db
+*.VC.VC.opendb

@@ -1,77 +1,144 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
-  Container, Typography, Table, TableBody,
-  TableCell, TableContainer, TableHead, TableRow,
-  Paper, IconButton, Button, Box
+  Container, Typography, Paper, IconButton, Button, Box, CircularProgress, Alert, Table, TableBody, TableCell, TableContainer, TableHead, TableRow
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
 import { useCart } from '../context/CartContext';
 import api from '../api/axios';
 import { useNavigate } from 'react-router-dom';
 
 export default function Cart() {
-  const { cart, removeFromCart, clearCart } = useCart();
+  const { cart, removeFromCart, clearCart, updateQuantity } = useCart();
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const nav = useNavigate();
 
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const total = useMemo(
+    () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    [cart]
+  );
 
-  const handleOrder = async () => {
+  const handleIncrease = async (item) => {
     setError('');
     try {
-      await api.post('/orders');
-      clearCart();
-      nav('/orders');
+      const { data: product } = await api.get(`/products/${item.id}`);
+      if (item.quantity + 1 > product.stock) {
+        setError(`Only ${product.stock} units of "${product.name}" available`);
+        return;
+      }
+      updateQuantity(item.id, item.quantity + 1);
     } catch (e) {
-      setError('Failed to place order');
+      setError('Failed to check stock. Please try again.');
     }
   };
 
-  return (
-    <Container sx={{ mt: 4 }}>
-      <Typography variant="h5" gutterBottom>Shopping Cart</Typography>
-      {cart.length === 0 ? (
-        <Typography>Your cart is empty.</Typography>
-      ) : (
-        <>
-          <TableContainer component={Paper} sx={{ mb: 2 }}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Product</TableCell>
-                  <TableCell>Price</TableCell>
-                  <TableCell>Quantity</TableCell>
-                  <TableCell>Subtotal</TableCell>
-                  <TableCell />
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {cart.map(item => (
-                  <TableRow key={item.id}>
-                    <TableCell>{item.name}</TableCell>
-                    <TableCell>${item.price.toFixed(2)}</TableCell>
-                    <TableCell>{item.quantity}</TableCell>
-                    <TableCell>${(item.price * item.quantity).toFixed(2)}</TableCell>
-                    <TableCell>
-                      <IconButton onClick={() => removeFromCart(item.id)}>
-                        <DeleteIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+  const handleDecrease = (item) => {
+    setError('');
+    if (item.quantity > 1) {
+      updateQuantity(item.id, item.quantity - 1);
+    } else {
+      removeFromCart(item.id);
+    }
+  };
 
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-            <Typography variant="h6">Total: ${total.toFixed(2)}</Typography>
-            <Button variant="contained" onClick={handleOrder}>
-              Place Order
-            </Button>
-          </Box>
-          {error && <Typography color="error">{error}</Typography>}
-        </>
-      )}
+  const handleOrder = async () => {
+    if (cart.length === 0) {
+      setError('Your cart is empty');
+      return;
+    }
+    setError('');
+    setIsSubmitting(true);
+    try {
+      // Validate stock and price for each item
+      for (const item of cart) {
+        const { data: product } = await api.get(`/products/${item.id}`);
+        if (product.stock < item.quantity) {
+          throw new Error(`Only ${product.stock} units of "${product.name}" available`);
+        }
+        if (product.price !== item.price) {
+          throw new Error(`Price of "${product.name}" has changed. Please refresh your cart.`);
+        }
+      }
+      // Place order
+      await api.post('/orders', cart.map(({ id, quantity }) => ({ id, quantity })));
+      clearCart();
+      nav('/orders');
+    } catch (e) {
+      setError(e.response?.data || e.message || 'Failed to place order. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (cart.length === 0) {
+    return (
+      <Container sx={{ mt: 6 }}>
+        <Typography variant="h5" gutterBottom>Your Cart</Typography>
+        <Alert severity="info">Your cart is empty.</Alert>
+      </Container>
+    );
+  }
+
+  return (
+    <Container sx={{ mt: 6 }}>
+      <Typography variant="h5" gutterBottom>Your Cart</Typography>
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      <TableContainer component={Paper} sx={{ mb: 3 }}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Product</TableCell>
+              <TableCell align="right">Price</TableCell>
+              <TableCell align="center">Quantity</TableCell>
+              <TableCell align="right">Subtotal</TableCell>
+              <TableCell align="center">Remove</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {cart.map(item => (
+              <TableRow key={item.id}>
+                <TableCell>{item.name}</TableCell>
+                <TableCell align="right">${item.price.toFixed(2)}</TableCell>
+                <TableCell align="center">
+                  <IconButton size="small" onClick={() => handleDecrease(item)} disabled={isSubmitting}>
+                    <RemoveIcon />
+                  </IconButton>
+                  <span style={{ margin: '0 8px', minWidth: 24, display: 'inline-block', textAlign: 'center' }}>{item.quantity}</span>
+                  <IconButton size="small" onClick={() => handleIncrease(item)} disabled={isSubmitting}>
+                    <AddIcon />
+                  </IconButton>
+                </TableCell>
+                <TableCell align="right">${(item.price * item.quantity).toFixed(2)}</TableCell>
+                <TableCell align="center">
+                  <IconButton onClick={() => removeFromCart(item.id)} color="error" disabled={isSubmitting}>
+                    <DeleteIcon />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
+            <TableRow>
+              <TableCell colSpan={3} align="right" sx={{ fontWeight: 700 }}>Total</TableCell>
+              <TableCell align="right" sx={{ fontWeight: 700 }}>${total.toFixed(2)}</TableCell>
+              <TableCell />
+            </TableRow>
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <Box sx={{ display: 'flex', gap: 2 }}>
+        <Button variant="outlined" color="error" onClick={clearCart} disabled={isSubmitting}>
+          Clear Cart
+        </Button>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleOrder}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? <CircularProgress size={24} /> : 'Place Order'}
+        </Button>
+      </Box>
     </Container>
   );
 }

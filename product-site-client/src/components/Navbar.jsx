@@ -1,22 +1,16 @@
 import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import api from '../api/axios';
+import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
-  const [user, setUser] = useState(null);
   const nav = useNavigate();
-
-  useEffect(() => {
-    api.get('/account/me')
-      .then(res => setUser(res.data))
-      .catch(() => setUser(null));
-  }, []);
+  const { user, logout, hasRole } = useAuth();
 
   const handleLogout = async () => {
-    await api.post('/account/logout');
-    setUser(null);
-    nav('/login');
+    const result = await logout();
+    if (result.success) {
+      nav('/login');
+    }
   };
 
   return (
@@ -34,7 +28,7 @@ export default function Navbar() {
           </>
         )}
 
-        {user?.claims?.some(c => c.type === 'role' && c.value === 'Admin') && (
+        {hasRole('Admin') && (
           <>
             <Button component={Link} to="/admin/products" color="inherit">Manage Products</Button>
             <Button component={Link} to="/admin/categories" color="inherit">Categories</Button>

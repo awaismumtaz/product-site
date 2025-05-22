@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using ProductSite.Api.Data;
 using ProductSite.Api.Models;
 
+// Handles CRUD for products and image upload
 [Route("api/[controller]")]
 [ApiController]
 public class ProductsController : ControllerBase
@@ -17,7 +18,7 @@ public class ProductsController : ControllerBase
         _imgSvc = imgSvc;
     }
 
-    // GET: api/products
+    // Get all products (with optional filters)
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Product>>> GetAll([FromQuery] int? categoryId, [FromQuery] string? search)
     {
@@ -33,7 +34,7 @@ public class ProductsController : ControllerBase
         return Ok(list);
     }
 
-    // GET: api/products/5
+    // Get a product by ID
     [HttpGet("{id:int}")]
     public async Task<ActionResult<Product>> GetById(int id)
     {
@@ -45,14 +46,16 @@ public class ProductsController : ControllerBase
         return Ok(prod);
     }
 
-    // POST: api/products
+    // Create a new product (admin only, with image upload)
     [HttpPost]
     [Authorize(Roles = "Admin")]
     [RequestSizeLimit(10_000_000)]  // allow up to ~10 MB
     public async Task<ActionResult<Product>> Create([FromForm] ProductDto dto)
     {
-        // Save image
-        var url = await _imgSvc.SaveImageAsync(dto.Image!);
+        if (dto.Image == null)
+            return BadRequest("Image is required");
+
+        var url = await _imgSvc.SaveImageAsync(dto.Image);
 
         var prod = new Product
         {
@@ -69,7 +72,7 @@ public class ProductsController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = prod.Id }, prod);
     }
 
-    // PUT: api/products/5
+    // Update a product (admin only)
     [HttpPut("{id:int}")]
     [Authorize(Roles = "Admin")]
     [RequestSizeLimit(10_000_000)]
@@ -85,9 +88,8 @@ public class ProductsController : ControllerBase
 
         if (dto.Image != null)
         {
-            // delete old file
-            _imgSvc.DeleteImage(prod.ImageUrl);
-            // save new
+            if (!string.IsNullOrEmpty(prod.ImageUrl))
+                _imgSvc.DeleteImage(prod.ImageUrl);
             prod.ImageUrl = await _imgSvc.SaveImageAsync(dto.Image);
         }
 
@@ -95,7 +97,7 @@ public class ProductsController : ControllerBase
         return NoContent();
     }
 
-    // DELETE: api/products/5
+    // Delete a product (admin only)
     [HttpDelete("{id:int}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)
@@ -103,18 +105,68 @@ public class ProductsController : ControllerBase
         var prod = await _db.Products.FindAsync(id);
         if (prod == null) return NotFound();
 
-        _imgSvc.DeleteImage(prod.ImageUrl);
+        if (!string.IsNullOrEmpty(prod.ImageUrl))
+            _imgSvc.DeleteImage(prod.ImageUrl);
 
         _db.Products.Remove(prod);
         await _db.SaveChangesAsync();
         return NoContent();
+    }
+
+    // Get sales data for a product (admin only)
+    [HttpGet("{id:int}/sales")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<object>> GetSalesData(int id)
+    {
+        var product = await _db.Products
+            .Include(p => p.Orders)
+            .Include(p => p.Reviews)
+            .FirstOrDefaultAsync(p => p.Id == id);
+
+        if (product == null) return NotFound();
+
+        var now = DateTime.UtcNow;
+        var sixMonthsAgo = now.AddMonths(-6);
+
+        var monthlySales = (product.Orders ?? new List<OrderItem>())
+            .Where(o => o.Order.Timestamp >= sixMonthsAgo)
+            .GroupBy(o => new { o.Order.Timestamp.Year, o.Order.Timestamp.Month })
+            .Select(g => new
+            {
+                Year = g.Key.Year,
+                Month = g.Key.Month,
+                Units = g.Sum(o => o.Quantity),
+                Revenue = g.Sum(o => o.PriceAtPurchase * o.Quantity)
+            })
+            .OrderBy(x => x.Year)
+            .ThenBy(x => x.Month)
+            .ToList();
+
+        var reviewStats = new
+        {
+            AverageRating = product.AverageRating,
+            TotalReviews = product.Reviews?.Count ?? 0,
+            RatingDistribution = (product.Reviews ?? new List<Review>())
+                .GroupBy(r => r.Rating)
+                .Select(g => new { Rating = g.Key, Count = g.Count() })
+                .OrderBy(x => x.Rating)
+                .ToList()
+        };
+
+        return Ok(new
+        {
+            TotalUnitsSold = product.UnitsSold,
+            CurrentStock = product.Stock,
+            MonthlySales = monthlySales,
+            Reviews = reviewStats
+        });
     }
 }
 
 // DTO for binding form-data
 public class ProductDto
 {
-    public string Name { get; set; } = null!;
+    public string Name { get; set; } = string.Empty;
     public decimal Price { get; set; }
     public int Stock { get; set; }
     public int CategoryId { get; set; }

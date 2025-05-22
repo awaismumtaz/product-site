@@ -1,20 +1,21 @@
 // src/pages/Orders.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Container,
   Typography,
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
   Box
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import api from '../api/axios';
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
 
 export default function Orders() {
   const [orders, setOrders] = useState([]);
@@ -25,6 +26,31 @@ export default function Orders() {
       .catch(err => console.error('Failed to load orders', err));
   }, []);
 
+  const columnHelper = createColumnHelper();
+
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor('productName', {
+        header: 'Product',
+        cell: info => info.getValue(),
+      }),
+      columnHelper.accessor('priceAtPurchase', {
+        header: 'Unit Price',
+        cell: info => `$${info.getValue().toFixed(2)}`,
+      }),
+      columnHelper.accessor('quantity', {
+        header: 'Qty',
+        cell: info => info.getValue(),
+      }),
+      columnHelper.accessor(row => row.priceAtPurchase * row.quantity, {
+        id: 'subtotal',
+        header: 'Subtotal',
+        cell: info => `$${info.getValue().toFixed(2)}`,
+      }),
+    ],
+    []
+  );
+
   return (
     <Container sx={{ mt: 4 }}>
       <Typography variant="h5" gutterBottom>
@@ -33,48 +59,65 @@ export default function Orders() {
 
       {orders.length === 0 && <Typography>No orders found.</Typography>}
 
-      {orders.map(order => (
-        <Accordion key={order.id} sx={{ mb: 2 }}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-              <Typography>Order #{order.id}</Typography>
-              <Typography>{new Date(order.timestamp).toLocaleString()}</Typography>
-            </Box>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Product</TableCell>
-                  <TableCell>Unit Price</TableCell>
-                  <TableCell>Qty</TableCell>
-                  <TableCell>Subtotal</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {order.items.map(item => (
-                  <TableRow key={item.id}>
-                    <TableCell>{item.productName}</TableCell>
-                    <TableCell>${item.priceAtPurchase.toFixed(2)}</TableCell>
-                    <TableCell>{item.quantity}</TableCell>
-                    <TableCell>
-                      ${(item.priceAtPurchase * item.quantity).toFixed(2)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <Box sx={{ mt: 1, textAlign: 'right' }}>
-              <Typography variant="subtitle1">
-                Total: $
-                {order.items
-                  .reduce((sum, i) => sum + i.priceAtPurchase * i.quantity, 0)
-                  .toFixed(2)}
-              </Typography>
-            </Box>
-          </AccordionDetails>
-        </Accordion>
-      ))}
+      {orders.map(order => {
+        const table = useReactTable({
+          data: order.items,
+          columns,
+          getCoreRowModel: getCoreRowModel(),
+        });
+
+        return (
+          <Accordion key={order.id} sx={{ mb: 2 }}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                <Typography>Order #{order.id}</Typography>
+                <Typography>{new Date(order.timestamp).toLocaleString()}</Typography>
+              </Box>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Box sx={{ overflow: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+                  <thead>
+                    {table.getHeaderGroups().map(headerGroup => (
+                      <tr key={headerGroup.id}>
+                        {headerGroup.headers.map(header => (
+                          <th key={header.id} style={{ padding: '6px 16px', textAlign: 'left', borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext()
+                                )}
+                          </th>
+                        ))}
+                      </tr>
+                    ))}
+                  </thead>
+                  <tbody>
+                    {table.getRowModel().rows.map(row => (
+                      <tr key={row.id}>
+                        {row.getVisibleCells().map(cell => (
+                          <td key={cell.id} style={{ padding: '6px 16px', borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </Box>
+              <Box sx={{ mt: 1, textAlign: 'right' }}>
+                <Typography variant="subtitle1">
+                  Total: $
+                  {order.items
+                    .reduce((sum, i) => sum + i.priceAtPurchase * i.quantity, 0)
+                    .toFixed(2)}
+                </Typography>
+              </Box>
+            </AccordionDetails>
+          </Accordion>
+        );
+      })}
     </Container>
-);
+  );
 }

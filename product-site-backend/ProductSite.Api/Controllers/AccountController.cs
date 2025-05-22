@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
+// Handles user registration, login, logout, and user info
 namespace ProductSite.Api.Controllers
 {
     [Route("api/[controller]")]
@@ -20,6 +21,7 @@ namespace ProductSite.Api.Controllers
         public record LoginRequest(string Email, string Password);
         public record RegisterRequest(string Email, string Password);
 
+        // Register a new user
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest input)
         {
@@ -38,12 +40,11 @@ namespace ProductSite.Api.Controllers
                 return BadRequest(result.Errors);
 
             await _userManager.AddToRoleAsync(user, "User");
-
             await _signInManager.SignInAsync(user, isPersistent: true);
             return Ok("Registered and signed in");
         }
 
-
+        // Login an existing user
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest login)
         {
@@ -58,6 +59,7 @@ namespace ProductSite.Api.Controllers
             return Ok("Login successful");
         }
 
+        // Logout the user
         [HttpPost("logout")]
         [Authorize]
         public async Task<IActionResult> Logout()
@@ -66,16 +68,24 @@ namespace ProductSite.Api.Controllers
             return Ok("Logged out");
         }
 
+        // Get info about the current user
         [HttpGet("me")]
         [Authorize]
-        public IActionResult Me()
+        public async Task<IActionResult> Me()
         {
             if (!User.Identity!.IsAuthenticated)
                 return Unauthorized();
 
+            var user = await _userManager.FindByNameAsync(User.Identity.Name!);
+            if (user == null)
+                return Unauthorized();
+
+            var roles = await _userManager.GetRolesAsync(user);
+
             return Ok(new
             {
                 User.Identity.Name,
+                Roles = roles,
                 Claims = User.Claims.Select(c => new { c.Type, c.Value })
             });
         }
