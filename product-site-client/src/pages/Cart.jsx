@@ -15,7 +15,7 @@ export default function Cart() {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const nav = useNavigate();
-  const { user, openLoginModal } = useAuth();
+  const { user, openLoginModal, hasRole } = useAuth();
 
   const total = useMemo(
     () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
@@ -48,6 +48,10 @@ export default function Cart() {
   const handleOrder = async () => {
     if (!user) {
       openLoginModal();
+      return;
+    }
+    if (hasRole('Admin')) {
+      setError('Admin users cannot place orders');
       return;
     }
     if (cart.length === 0) {

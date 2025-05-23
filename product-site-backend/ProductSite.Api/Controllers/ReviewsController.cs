@@ -4,6 +4,7 @@ using ProductSite.Api.Data;
 using ProductSite.Api.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Identity;
 
 // Handles product reviews (only for purchased products)
 [Route("api/[controller]")]
@@ -11,8 +12,13 @@ using System.Security.Claims;
 public class ReviewsController : ControllerBase
 {
     private readonly AppDbContext _db;
+    private readonly UserManager<IdentityUser> _userManager;
 
-    public ReviewsController(AppDbContext db) => _db = db;
+    public ReviewsController(AppDbContext db, UserManager<IdentityUser> userManager)
+    {
+        _db = db;
+        _userManager = userManager;
+    }
 
     // Get all reviews for a product
     [HttpGet("{productId:int}")]
@@ -46,11 +52,19 @@ public class ReviewsController : ControllerBase
     // Create a review (user must have purchased the product)
     [HttpPost]
     [Authorize]
-    public async Task<ActionResult<Review>> Create([FromBody] ReviewDto dto)
+    public async Task<ActionResult<Review>> CreateReview([FromBody] ReviewDto dto)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (userId == null)
             return Unauthorized();
+
+        // Check if user is admin
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+            return Unauthorized();
+
+        if (await _userManager.IsInRoleAsync(user, "Admin"))
+            return Forbid("Admin users cannot write reviews");
         
         // Find the most recent order that contains this product
         var order = await _db.Orders
@@ -132,6 +146,20 @@ public class ReviewsController : ControllerBase
             Console.Error.WriteLine($"Error in CanReview: {ex}");
             return StatusCode(500, new { error = "An error occurred while checking review eligibility" });
         }
+    }
+
+    // Get all reviews (admin only)
+    [HttpGet("all")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<IEnumerable<Review>>> GetAllReviews()
+    {
+        var reviews = await _db.Reviews
+            .Include(r => r.Product)
+            .Include(r => r.Order)
+            .OrderByDescending(r => r.Timestamp)
+            .ToListAsync();
+
+        return Ok(reviews);
     }
 }
 

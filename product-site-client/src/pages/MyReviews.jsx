@@ -64,7 +64,7 @@ export default function MyReviews() {
       ) : (
         <Grid container spacing={3}>
           {reviews.map((review) => (
-            <Grid item xs={12} key={review.id}>
+            <Grid key={review.id} sx={{ width: '100%' }}>
               <Card>
                 <CardContent>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>

@@ -41,7 +41,7 @@ namespace ProductSite.Api.Controllers
 
                 var orders = await _context.Orders
                     .Where(o => o.UserId == userId)
-                    .Include(o => o.Items)
+                    .Include(o => o.Items!)
                         .ThenInclude(i => i.Product)
                     .OrderByDescending(o => o.Timestamp)
                     .ToListAsync();
@@ -81,84 +81,66 @@ namespace ProductSite.Api.Controllers
 
         // Create a new order from cart
         [HttpPost]
-        public async Task<ActionResult<Order>> CreateOrder([FromBody] List<CartItemDto> cartItems)
+        [Authorize]
+        public async Task<ActionResult<Order>> CreateOrder([FromBody] List<OrderItemDto> items)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            try
-            {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (userId == null)
-                    return Unauthorized();
-                if (cartItems == null || cartItems.Count == 0)
-                    return BadRequest("Cart is empty");
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+                return Unauthorized();
 
-                // Validate stock and prices
-                foreach (var item in cartItems)
+            // Check if user is admin
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+                return Unauthorized();
+
+            if (await _userManager.IsInRoleAsync(user, "Admin"))
+                return Forbid("Admin users cannot place orders");
+
+            // Validate items
+            if (items == null || !items.Any())
+                return BadRequest("Order must contain at least one item");
+
+            // Create order
+            var order = new Order
+            {
+                UserId = userId,
+                Timestamp = DateTime.UtcNow,
+                Items = items.Select(item => new OrderItem
                 {
-                    var product = await _context.Products.FindAsync(item.Id);
-                    if (product == null)
-                        return BadRequest($"Product {item.Id} not found");
-                    
-                    if (product.Stock < item.Quantity)
-                        return BadRequest($"Insufficient stock for product {product.Name}");
-                    
-                    // Compare prices with a small tolerance for decimal arithmetic
-                    if (Math.Abs(product.Price - item.Price) > 0.001m)
-                        return BadRequest($"Price mismatch for product {product.Name}");
-                }
+                    ProductId = item.ProductId,
+                    Quantity = item.Quantity,
+                    PriceAtPurchase = item.Price
+                }).ToList()
+            };
 
-                var order = new Order
-                {
-                    UserId = userId,
-                    Timestamp = DateTime.UtcNow,
-                    Items = new List<OrderItem>()
-                };
+            _context.Orders.Add(order);
+            await _context.SaveChangesAsync();
 
-                // Update stock and create order items
-                foreach (var item in cartItems)
-                {
-                    var product = await _context.Products.FindAsync(item.Id);
-                    product!.Stock -= item.Quantity;
-                    
-                    order.Items.Add(new OrderItem
-                    {
-                        ProductId = item.Id,
-                        ProductName = item.Name,
-                        PriceAtPurchase = item.Price,
-                        Quantity = item.Quantity
-                    });
-                }
-
-                _context.Orders.Add(order);
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
-                return Ok(new { success = true, orderId = order.Id });
-            }
-            catch (JsonException jsonEx)
-            {
-                return BadRequest($"Invalid JSON format: {jsonEx.Message}");
-            }
-            catch (DbUpdateException)
-            {
-                return StatusCode(500, "Database error occurred while processing your order");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"An unexpected error occurred: {ex.Message}");
-            }
+            return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, order);
         }
 
         // Get all orders (admin only)
         [HttpGet("all")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<IEnumerable<Order>>> GetAllOrders()
+        public async Task<ActionResult<IEnumerable<object>>> GetAllOrders()
         {
             var orders = await _context.Orders
                 .Include(o => o.Items)
                 .Include(o => o.User)
                 .OrderByDescending(o => o.Timestamp)
+                .Select(o => new
+                {
+                    o.Id,
+                    o.Timestamp,
+                    o.Items,
+                    User = new
+                    {
+                        o.User.Email,
+                        o.User.UserName
+                    }
+                })
                 .ToListAsync();
-            return orders;
+            return Ok(orders);
         }
 
         // Get sales summary (admin only)
@@ -185,6 +167,13 @@ namespace ProductSite.Api.Controllers
         {
             public int Id { get; set; }
             public string Name { get; set; } = string.Empty;
+            public decimal Price { get; set; }
+            public int Quantity { get; set; }
+        }
+
+        public class OrderItemDto
+        {
+            public int ProductId { get; set; }
             public decimal Price { get; set; }
             public int Quantity { get; set; }
         }

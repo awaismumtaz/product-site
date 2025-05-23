@@ -119,7 +119,7 @@ public class ProductsController : ControllerBase
     public async Task<ActionResult<object>> GetSalesData(int id)
     {
         var product = await _db.Products
-            .Include(p => p.Orders)
+            .Include(p => p.Orders!)
                 .ThenInclude(o => o.Order)
             .Include(p => p.Reviews)
             .FirstOrDefaultAsync(p => p.Id == id);
@@ -129,9 +129,9 @@ public class ProductsController : ControllerBase
         var now = DateTime.UtcNow;
         var sixMonthsAgo = now.AddMonths(-6);
 
-        var monthlySales = (product.Orders ?? new List<OrderItem>())
+        var monthlySales = product.Orders?
             .Where(o => o.Order != null && o.Order.Timestamp >= sixMonthsAgo)
-            .GroupBy(o => new { o.Order.Timestamp.Year, o.Order.Timestamp.Month })
+            .GroupBy(o => new { o.Order!.Timestamp.Year, o.Order.Timestamp.Month })
             .Select(g => new
             {
                 Year = g.Key.Year,

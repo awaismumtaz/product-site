@@ -36,9 +36,12 @@ export const AuthProvider = ({ children }) => {
       // The backend will set the authentication cookie
       // We just need to fetch the user info
       const userResponse = await api.get('/account/me');
-      setUser(userResponse.data);
-      closeLoginModal();
-      return { success: true };
+      const userData = userResponse.data;
+      setUser(userData);
+      return { 
+        success: true,
+        isAdmin: userData.roles?.includes('Admin') || false
+      };
     } catch (error) {
       console.error("Login error:", error);
       return { success: false, message: error.response?.data?.message || 'Login failed' };

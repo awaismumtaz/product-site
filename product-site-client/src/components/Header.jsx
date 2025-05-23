@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { AppBar, Toolbar, Typography, Button, Box, Dialog, Tabs, Tab, TextField, Alert, CircularProgress, Checkbox, FormControlLabel, IconButton, Tooltip } from '@mui/material';
+import { AppBar, Toolbar, Typography, Button, Box, Dialog, Tabs, Tab, TextField, Alert, CircularProgress, Checkbox, FormControlLabel, IconButton, Tooltip, Menu, MenuItem } from '@mui/material';
 import LoginIcon from '@mui/icons-material/Login';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import LogoutIcon from '@mui/icons-material/Logout';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
 import RateReviewIcon from '@mui/icons-material/RateReview';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import api from '../api/axios';
 
 export default function Header() {
   const [tab, setTab] = useState(0); // 0 = Login, 1 = Register
@@ -16,6 +18,7 @@ export default function Header() {
   const [keepLoggedIn, setKeepLoggedIn] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [adminMenuAnchor, setAdminMenuAnchor] = useState(null);
   const { user, login, register, logout, hasRole, loading, loginModalOpen, openLoginModal, closeLoginModal } = useAuth();
   const nav = useNavigate();
 
@@ -54,16 +57,19 @@ export default function Header() {
     try {
       if (tab === 0) {
         // Login
-        const result = await login(email, password, keepLoggedIn);
+        const result = await login(email, password);
         if (result.success) {
-          // Redirect based on role
-          setTimeout(() => {
-            if (hasRole && hasRole('Admin')) {
-              nav('/admin/products');
-            } else {
-              nav('/');
-            }
-          }, 0);
+          // Get the user info to check roles
+          const userResponse = await api.get('/account/me');
+          const userData = userResponse.data;
+          
+          // Check if user is admin and redirect accordingly
+          if (userData.roles && userData.roles.includes('Admin')) {
+            nav('/admin/products');
+          } else {
+            nav('/');
+          }
+          closeLoginModal();
         } else {
           setError(result.message || 'Login failed');
         }
@@ -72,6 +78,7 @@ export default function Header() {
         const result = await register(email, password);
         if (result.success) {
           nav('/');
+          closeLoginModal();
         } else {
           setError(result.message || 'Registration failed');
         }
@@ -86,6 +93,19 @@ export default function Header() {
   const handleLogout = async () => {
     await logout();
     nav('/');
+  };
+
+  const handleAdminMenuOpen = (event) => {
+    setAdminMenuAnchor(event.currentTarget);
+  };
+
+  const handleAdminMenuClose = () => {
+    setAdminMenuAnchor(null);
+  };
+
+  const handleAdminMenuItemClick = (path) => {
+    nav(path);
+    handleAdminMenuClose();
   };
 
   // Determine role and icon color
@@ -104,33 +124,76 @@ export default function Header() {
           <Button component={Link} to="/" color="inherit">Home</Button>
           <Button component={Link} to="/about" color="inherit">About Us</Button>
           {isAdmin && (
-            <Button component={Link} to="/admin/products" color="error" variant="outlined" sx={{ ml: 2, fontWeight: 700 }}>
-              Admin Panel
-            </Button>
+            <>
+              <Button
+                color="error"
+                variant="outlined"
+                startIcon={<AdminPanelSettingsIcon />}
+                component={Link}
+                to="/admin/products"
+                sx={{ fontWeight: 700 }}
+              >
+                Products
+              </Button>
+              <Button
+                color="error"
+                variant="outlined"
+                startIcon={<ShoppingBagIcon />}
+                component={Link}
+                to="/admin/orders"
+                sx={{ fontWeight: 700 }}
+              >
+                Orders
+              </Button>
+              <Button
+                color="error"
+                variant="outlined"
+                startIcon={<RateReviewIcon />}
+                component={Link}
+                to="/admin/reviews"
+                sx={{ fontWeight: 700 }}
+              >
+                Reviews
+              </Button>
+              <Button
+                color="error"
+                variant="outlined"
+                startIcon={<PersonAddIcon />}
+                component={Link}
+                to="/admin/users"
+                sx={{ fontWeight: 700 }}
+              >
+                Users
+              </Button>
+            </>
           )}
         </Box>
         {/* Right: Auth buttons */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {user ? (
             <>
-              <Button 
-                component={Link} 
-                to="/orders" 
-                color="inherit" 
-                startIcon={<ShoppingBagIcon />}
-                sx={{ mr: 1 }}
-              >
-                Orders
-              </Button>
-              <Button 
-                component={Link} 
-                to="/reviews" 
-                color="inherit" 
-                startIcon={<RateReviewIcon />}
-                sx={{ mr: 1 }}
-              >
-                Reviews
-              </Button>
+              {!isAdmin && (
+                <>
+                  <Button 
+                    component={Link} 
+                    to="/orders" 
+                    color="inherit" 
+                    startIcon={<ShoppingBagIcon />}
+                    sx={{ mr: 1 }}
+                  >
+                    Orders
+                  </Button>
+                  <Button 
+                    component={Link} 
+                    to="/reviews" 
+                    color="inherit" 
+                    startIcon={<RateReviewIcon />}
+                    sx={{ mr: 1 }}
+                  >
+                    Reviews
+                  </Button>
+                </>
+              )}
               <Tooltip title={tooltipTitle} arrow>
                 <AccountCircleIcon sx={{ color: iconColor, mr: 1 }} />
               </Tooltip>

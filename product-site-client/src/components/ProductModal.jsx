@@ -44,6 +44,13 @@ export default function ProductModal({ product, open, onClose }) {
         return;
       }
 
+      // Prevent admin users from reviewing
+      if (user.roles?.includes('Admin')) {
+        setCanReview(false);
+        setError('Admin users cannot write reviews');
+        return;
+      }
+
       try {
         const response = await api.get(`/Reviews/canreview/${product.id}`);
         setCanReview(response.data.canReview);

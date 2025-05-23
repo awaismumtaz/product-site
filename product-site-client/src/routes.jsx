@@ -10,16 +10,21 @@ import AdminProducts from './pages/admin/AdminProducts';
 import AdminCategories from './pages/admin/AdminCategories';
 import AdminSales from './pages/admin/AdminSales';
 import AdminOrders from './pages/admin/AdminOrders';
+import AdminReviews from './pages/AdminReviews';
+import AdminUsers from './pages/admin/AdminUsers';
 import Layout from './components/Layout';
 import { CartProvider } from './context/CartContext';
+import { AuthProvider } from './context/AuthContext';
 
 const router = createBrowserRouter([
   {
     path: '/',
     element: (
-      <CartProvider>
-        <Layout />
-      </CartProvider>
+      <AuthProvider>
+        <CartProvider>
+          <Layout />
+        </CartProvider>
+      </AuthProvider>
     ),
     children: [
       { index: true, element: <Home /> },
@@ -43,6 +48,14 @@ const router = createBrowserRouter([
       {
         path: 'admin/orders',
         element: <RequireAuth role="Admin"><AdminOrders/></RequireAuth>
+      },
+      {
+        path: 'admin/reviews',
+        element: <RequireAuth role="Admin"><AdminReviews/></RequireAuth>
+      },
+      {
+        path: 'admin/users',
+        element: <RequireAuth role="Admin"><AdminUsers/></RequireAuth>
       }
     ]
   }

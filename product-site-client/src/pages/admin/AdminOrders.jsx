@@ -24,7 +24,11 @@ export default function AdminOrders() {
 
   const columns = [
     columnHelper.accessor('id', { header: 'Order ID' }),
-    columnHelper.accessor(row => row.user?.userName || 'N/A', { id: 'userName', header: 'User' }),
+    columnHelper.accessor(row => row.user?.email || 'N/A', { 
+      id: 'userName', 
+      header: 'User',
+      cell: info => info.getValue()
+    }),
     columnHelper.accessor('timestamp', {
       header: 'Date',
       cell: info => new Date(info.getValue()).toLocaleString()
@@ -128,7 +132,7 @@ export default function AdminOrders() {
         <Dialog open={!!selectedOrder} onClose={() => setSelectedOrder(null)} fullWidth maxWidth="sm">
           <DialogTitle>Order ID: {selectedOrder.id}</DialogTitle>
           <DialogContent dividers>
-            <Typography variant="subtitle1">User: {selectedOrder.user?.userName || 'N/A'}</Typography>
+            <Typography variant="subtitle1">User: {selectedOrder.user?.email || 'N/A'}</Typography>
             <Typography variant="subtitle1">Date: {new Date(selectedOrder.timestamp).toLocaleString()}</Typography>
             <Typography variant="h6" sx={{mt: 2, mb: 1}}>Items:</Typography>
             <List disablePadding>
