@@ -4,6 +4,8 @@ import LoginIcon from '@mui/icons-material/Login';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import LogoutIcon from '@mui/icons-material/Logout';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
+import RateReviewIcon from '@mui/icons-material/RateReview';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -111,6 +113,24 @@ export default function Header() {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {user ? (
             <>
+              <Button 
+                component={Link} 
+                to="/orders" 
+                color="inherit" 
+                startIcon={<ShoppingBagIcon />}
+                sx={{ mr: 1 }}
+              >
+                Orders
+              </Button>
+              <Button 
+                component={Link} 
+                to="/reviews" 
+                color="inherit" 
+                startIcon={<RateReviewIcon />}
+                sx={{ mr: 1 }}
+              >
+                Reviews
+              </Button>
               <Tooltip title={tooltipTitle} arrow>
                 <AccountCircleIcon sx={{ color: iconColor, mr: 1 }} />
               </Tooltip>

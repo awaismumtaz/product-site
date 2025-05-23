@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using ProductSite.Api.Data;
 using ProductSite.Api.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 // Handles product reviews (only for purchased products)
 [Route("api/[controller]")]
@@ -24,15 +25,32 @@ public class ReviewsController : ControllerBase
         return Ok(reviews);
     }
 
+    // Get all reviews by the current user
+    [HttpGet("my")]
+    [Authorize]
+    public async Task<ActionResult<IEnumerable<Review>>> GetMyReviews()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null)
+            return Unauthorized();
+
+        var reviews = await _db.Reviews
+            .Include(r => r.Product)
+            .Where(r => r.UserId == userId)
+            .OrderByDescending(r => r.Timestamp)
+            .ToListAsync();
+
+        return Ok(reviews);
+    }
+
     // Create a review (user must have purchased the product)
     [HttpPost]
     [Authorize]
     public async Task<ActionResult<Review>> Create([FromBody] ReviewDto dto)
     {
-        if (User.Identity?.Name == null)
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null)
             return Unauthorized();
-
-        var userId = User.Identity.Name;
         
         // Find the most recent order that contains this product
         var order = await _db.Orders
@@ -81,31 +99,39 @@ public class ReviewsController : ControllerBase
     [Authorize]
     public async Task<ActionResult<object>> CanReview(int productId)
     {
-        if (User.Identity?.Name == null)
-            return Unauthorized();
-
-        var userId = User.Identity.Name;
-
-        // Check if user has purchased the product
-        var hasPurchased = await _db.Orders
-            .Where(o => o.UserId == userId)
-            .SelectMany(o => o.Items ?? Enumerable.Empty<OrderItem>())
-            .AnyAsync(i => i.ProductId == productId);
-
-        if (!hasPurchased)
+        try
         {
-            return Ok(new { canReview = false, reason = "You must purchase this product to review it" });
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+                return Unauthorized();
+
+            // Check if user has purchased the product
+            var hasPurchased = await _db.Orders
+                .Include(o => o.Items)
+                .Where(o => o.UserId == userId)
+                .AnyAsync(o => o.Items != null && o.Items.Any(i => i.ProductId == productId));
+
+            if (!hasPurchased)
+            {
+                return Ok(new { canReview = false, reason = "You must purchase this product to review it" });
+            }
+
+            // Check if user has already reviewed this product
+            var hasReviewed = await _db.Reviews
+                .AnyAsync(r => r.ProductId == productId && r.UserId == userId);
+
+            return Ok(new 
+            { 
+                canReview = !hasReviewed,
+                reason = hasReviewed ? "You have already reviewed this product" : null
+            });
         }
-
-        // Check if user has already reviewed this product
-        var hasReviewed = await _db.Reviews
-            .AnyAsync(r => r.ProductId == productId && r.UserId == userId);
-
-        return Ok(new 
-        { 
-            canReview = !hasReviewed,
-            reason = hasReviewed ? "You have already reviewed this product" : null
-        });
+        catch (Exception ex)
+        {
+            // Log the error
+            Console.Error.WriteLine($"Error in CanReview: {ex}");
+            return StatusCode(500, new { error = "An error occurred while checking review eligibility" });
+        }
     }
 }
 

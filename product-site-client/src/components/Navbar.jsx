@@ -25,6 +25,7 @@ export default function Navbar() {
           <>
             <Button component={Link} to="/cart" color="inherit">Cart</Button>
             <Button component={Link} to="/orders" color="inherit">Orders</Button>
+            <Button component={Link} to="/reviews" color="inherit">My Reviews</Button>
           </>
         )}
 

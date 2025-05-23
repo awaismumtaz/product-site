@@ -3,6 +3,7 @@ import Home from './pages/Home';
 import Product from './pages/Product';
 import Cart from './pages/Cart';
 import Orders from './pages/Orders';
+import MyReviews from './pages/MyReviews';
 import About from './pages/About';
 import RequireAuth from './components/RequireAuth';
 import AdminProducts from './pages/admin/AdminProducts';
@@ -26,6 +27,7 @@ const router = createBrowserRouter([
       { path: 'product/:id', element: <Product /> },
       { path: 'cart', element: <Cart/> },
       { path: 'orders', element: <RequireAuth><Orders/></RequireAuth> },
+      { path: 'reviews', element: <RequireAuth><MyReviews/></RequireAuth> },
       { 
         path: 'admin/products', 
         element: <RequireAuth role="Admin"><AdminProducts/></RequireAuth> 

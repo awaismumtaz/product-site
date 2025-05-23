@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Grid, Card, CardMedia, CardContent, Typography, Button, Box, Container, CircularProgress, Alert } from '@mui/material';
 import api from '../api/axios';
 import { useCart } from '../context/CartContext';
+import ProductModal from './ProductModal';
 
 export default function ProductGrid() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showAll, setShowAll] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const { addToCart } = useCart();
 
   // Show products in multiples of 6 to maintain complete rows
@@ -33,6 +35,14 @@ export default function ProductGrid() {
     };
     fetchProducts();
   }, []);
+
+  const handleProductClick = (product) => {
+    setSelectedProduct(product);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedProduct(null);
+  };
 
   return (
     <Container maxWidth="xl">
@@ -70,23 +80,26 @@ export default function ProductGrid() {
               spacing={3}
               justifyContent="flex-start"
             >
-              {displayedProducts.map(prod => {
-                return (
+              {displayedProducts.map(prod => (
                 <Grid key={prod.id} sx={{ width: { xs: '100%', sm: '50%', md: '33.33%', lg: '16.66%' } }}>
-                  <Card sx={{ 
-                    height: '100%', 
-                    display: 'flex', 
-                    flexDirection: 'column',
-                    transition: 'transform 0.2s, box-shadow 0.2s',
-                    '&:hover': {
-                      transform: 'translateY(-4px)',
-                      boxShadow: 6
-                    }
-                  }}>
+                  <Card 
+                    sx={{ 
+                      height: '100%', 
+                      display: 'flex', 
+                      flexDirection: 'column',
+                      transition: 'transform 0.2s, box-shadow 0.2s',
+                      cursor: 'pointer',
+                      '&:hover': {
+                        transform: 'translateY(-4px)',
+                        boxShadow: 6
+                      }
+                    }}
+                    onClick={() => handleProductClick(prod)}
+                  >
                     <CardMedia
                       component="img"
                       height="160"
-                        image={`http://localhost:5246${prod.imageUrl}`}
+                      image={`http://localhost:5246${prod.imageUrl}`}
                       alt={prod.name}
                       sx={{ 
                         objectFit: 'contain', 
@@ -106,6 +119,10 @@ export default function ProductGrid() {
                       <Button 
                         variant="contained" 
                         fullWidth
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent modal from opening
+                          addToCart(prod, 1);
+                        }}
                         sx={{
                           bgcolor: 'error.main',
                           color: 'white',
@@ -113,15 +130,13 @@ export default function ProductGrid() {
                             bgcolor: 'error.dark'
                           }
                         }}
-                        onClick={() => addToCart(prod, 1)}
                       >
                         Add to cart
                       </Button>
                     </Box>
                   </Card>
                 </Grid>
-                );
-              })}
+              ))}
             </Grid>
 
             {/* Show more button */}
@@ -156,6 +171,15 @@ export default function ProductGrid() {
           </>
         )}
       </Box>
+
+      {/* Product Modal */}
+      {selectedProduct && (
+        <ProductModal
+          product={selectedProduct}
+          open={!!selectedProduct}
+          onClose={handleCloseModal}
+        />
+      )}
     </Container>
   );
 } 
